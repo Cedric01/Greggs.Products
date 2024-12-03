@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Greggs.Products.Api.Models;
+using Greggs.Products.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -11,30 +13,36 @@ namespace Greggs.Products.Api.Controllers;
 [Route("[controller]")]
 public class ProductController : ControllerBase
 {
-    private static readonly string[] Products = new[]
-    {
-        "Sausage Roll", "Vegan Sausage Roll", "Steak Bake", "Yum Yum", "Pink Jammie"
-    };
-
     private readonly ILogger<ProductController> _logger;
+    private readonly ProductService _productService;
 
-    public ProductController(ILogger<ProductController> logger)
+    public ProductController(ILogger<ProductController> logger, ProductService productService)
     {
         _logger = logger;
+        _productService = productService;
     }
 
     [HttpGet]
-    public IEnumerable<Product> Get(int pageStart = 0, int pageSize = 5)
+    public async Task<IActionResult> GetAll(int? pageStart = null, int? pageSize = null)
     {
-        if (pageSize > Products.Length)
-            pageSize = Products.Length;
+        var products = await _productService.GetAllProducts(pageStart, pageSize);
+        if(products.Count() == 0)
+        {
+            _logger.LogInformation("Products Call was null or Empty");
+            throw new InvalidOperationException("No products available.");
+        }
+        return Ok(products);
+    }
 
-        var rng = new Random();
-        return Enumerable.Range(1, pageSize).Select(index => new Product
-            {
-                PriceInPounds = rng.Next(0, 10),
-                Name = Products[rng.Next(Products.Length)]
-            })
-            .ToArray();
+    [HttpGet("in-euro")]
+    public async Task<IActionResult> GetProductsInEuro(int? pageStart = null, int? pageSize = null)
+    {
+        var products = await _productService.GetProductsInEuroAsync(pageStart, pageSize);
+        if (products.Count() == 0)
+        {
+            _logger.LogInformation("Products Call was null or Empty");
+            throw new InvalidOperationException("No products available.");
+        }
+        return Ok(products);
     }
 }

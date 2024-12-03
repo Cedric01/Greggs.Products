@@ -1,3 +1,7 @@
+using Greggs.Products.Api.DataAccess;
+using Greggs.Products.Api.Interfaces;
+using Greggs.Products.Api.Models;
+using Greggs.Products.Api.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +16,10 @@ public class Startup
         services.AddControllers();
 
         services.AddSwaggerGen();
+        services.AddScoped<ProductService>();
+        services.AddScoped<IDataAccess<Product>, ProductAccess>();
+        services.AddScoped<ICurrencyConversionService, CurrencyConversionService>();
+ 
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
